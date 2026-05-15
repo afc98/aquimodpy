@@ -62,12 +62,10 @@ obs = aq.Observations(
     model=model,
     obs_df=pd.load_csv('path/to/observations.csv'),
     columns={
-        "DAY": "DAY",
-        "MONTH": "MONTH",
-        "YEAR": "YEAR",
+        "DATE": "DATE",
         "RAIN": "RAIN",
         "PET": "PET",
-        "SOIL_WC": "SOIL_WC",
+        "SOIL_VWC": "SOIL_WC", # Map model's SOIL_VWC to user's SOIL_WC
         "GWL": "GWL",
         "ABS": "ABS",
     })
