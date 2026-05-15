@@ -21,8 +21,9 @@ model = aq.Model(
     executable_path='path/to/aquimod/executable',
     working_directory='path/to/working/directory',
     spinup_time=365,
-    run_mode='evaluation',
     )
+
+runner = aq.EvaluationRunner(model=model)
 
 # Set up the soil zone module
 soil_zone = aq.SoilZone(
