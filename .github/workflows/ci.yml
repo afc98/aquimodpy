@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies and package
         run: uv sync --all-groups
       - name: Build documentation
-        run: uv run mkdocs build
+        run: uv run mkdocs build --verbose
       - name: Check formatting (Black)
         run: uv run black --check src tests
       - name: Type checking (Mypy)
