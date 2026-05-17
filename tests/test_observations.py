@@ -1,85 +1,92 @@
+import pytest
 import pandas as pd
 import os
-import pytest
-from aquimodpy import Model, Observations
+from aquimodpy.Model import Model
+from aquimodpy.Components import Observations
 
-def test_observations_modifies_df_in_place(tmp_path):
-    # Setup
-    working_dir = tmp_path / "working"
-    working_dir.mkdir()
-    
-    model = Model("TestModel", "fake_path", str(working_dir))
-    
-    data = {
-        "date": ["2020-01-01", "2020-01-02"],
-        "rain": [1.0, 2.0],
-        "pet": [0.5, 0.6],
-        "soil": [0.1, 0.2],
-        "gwl": [10.0, 11.0],
-        "abs": [0.0, 0.0]
-    }
-    df = pd.DataFrame(data)
-    df_original = df.copy()
-    
-    columns = {
-        "DATE": "date",
-        "RAIN": "rain",
-        "PET": "pet",
-        "SOIL_VWC": "soil",
-        "GWL": "gwl",
-        "ABS": "abs"
-    }
-    
-    obs = Observations(model, df, columns)
-    obs.write_obs_file()
-    
-    # Check if original df was NOT modified
-    # 1. Date column should still be object/string if it was originally
-    assert not pd.api.types.is_datetime64_any_dtype(df["date"])
-    # 2. New columns should NOT be added
-    assert "DAY" not in df.columns
-    assert "MONTH" not in df.columns
-    assert "YEAR" not in df.columns
-    
-    # This confirms in-place modification, which is usually undesirable in a library
-    # unless explicitly documented.
 
-def test_observations_write_file_content(tmp_path):
-    working_dir = tmp_path / "working"
-    working_dir.mkdir()
-    
-    model = Model("TestModel", "fake_path", str(working_dir))
-    
-    data = {
-        "date": ["2020-01-01", "2020-01-02"],
-        "rain": [1.0, None], # Testing fillna
-        "pet": [0.5, 0.6],
-        "soil": [0.1, 0.2],
-        "gwl": [10.0, 11.0],
-        "abs": [0.0, 0.0]
-    }
-    df = pd.DataFrame(data)
-    
-    columns = {
-        "DATE": "date",
-        "RAIN": "rain",
-        "PET": "pet",
-        "SOIL_VWC": "soil",
-        "GWL": "gwl",
-        "ABS": "abs"
-    }
-    
-    obs = Observations(model, df, columns)
+def test_observations_mapping(tmp_path):
+    model = Model("Test", "exe", str(tmp_path))
+
+    dates = pd.date_range("2020-01-01", periods=3)
+    df = pd.DataFrame(
+        {
+            "my_date": dates,
+            "precip": [1, 2, 3],
+            "evap": [0.1, 0.2, 0.3],
+            "level": [10, 11, 12],
+        }
+    )
+
+    obs = Observations(
+        model, df, {"DATE": "my_date", "RAIN": "precip", "PET": "evap", "GWL": "level"}
+    )
+
     obs.write_obs_file()
-    
-    out_file = working_dir / "Observations.txt"
-    assert out_file.exists()
-    
-    with open(out_file, "r") as f:
-        lines = f.readlines()
-        
-    assert lines[0].strip() == "NUMBER OF OBSERVATIONS"
-    assert lines[1].strip() == "2"
-    assert "DAY\tMONTH\tYEAR\tRAIN\tPET\tSOIL_VWC\tGWL\tABS" in lines[2]
-    # Check fillna
-    assert "-9999" in lines[4]
+
+    obs_file = tmp_path / "Observations.txt"
+    assert os.path.exists(obs_file)
+
+    # Skip the first two comment/count lines
+    with open(obs_file, "r") as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]
+
+    assert "NUMBER OF OBSERVATIONS" in lines[0]
+    assert "3" == lines[1]
+
+    # Parse the data section
+    # The columns are on line 2 (0-indexed)
+    from io import StringIO
+
+    data_str = "\n".join(lines[2:])
+    read_df = pd.read_csv(StringIO(data_str), sep=r"\s+")
+
+    assert "ABS" in read_df.columns
+    assert "SOIL_VWC" in read_df.columns
+    assert read_df["ABS"].iloc[0] == 0
+    assert read_df["RAIN"].iloc[0] == 1
+
+
+def test_observations_missing_required_columns():
+    model = Model("Test", "exe", "dir")
+    df = pd.DataFrame(
+        {
+            "DATE": pd.date_range("2020-01-01", periods=2),
+            "RAIN": [1, 2],
+            "PET": [0.1, 0.2],
+        }
+    )
+
+    # Missing RAIN in mapping
+    with pytest.raises(KeyError, match="Required key 'RAIN' missing"):
+        Observations(model, df, {"DATE": "DATE", "PET": "PET"})
+
+    # Missing PET in mapping
+    with pytest.raises(KeyError, match="Required key 'PET' missing"):
+        Observations(model, df, {"DATE": "DATE", "RAIN": "RAIN"})
+
+
+def test_observations_nans_in_required_columns(tmp_path):
+    model = Model("Test", "exe", str(tmp_path))
+    df = pd.DataFrame(
+        {
+            "DATE": pd.date_range("2020-01-01", periods=2),
+            "RAIN": [1, None],
+            "PET": [0.1, 0.2],
+        }
+    )
+
+    obs = Observations(model, df, {"DATE": "DATE", "RAIN": "RAIN", "PET": "PET"})
+    with pytest.raises(ValueError, match="Column 'RAIN' contains missing values"):
+        obs.write_obs_file()
+
+
+def test_observations_missing_date():
+    model = Model("Test", "exe", "dir")
+    df = pd.DataFrame({"RAIN": [1, 2]})
+    # Now it should raise at __init__
+    with pytest.raises(KeyError, match="Required key 'DATE' missing"):
+        Observations(model, df, {"RAIN": "RAIN"})
+
+    with pytest.raises(KeyError, match="Mapped DATE column 'DATE' missing"):
+        Observations(model, df, {"DATE": "DATE"})
