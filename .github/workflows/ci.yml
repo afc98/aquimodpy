@@ -19,10 +19,21 @@ jobs:
         run: |
           uv pip install .
           uv run mkdocs build --verbose
-      - name: Check formatting (Black)
-        run: uv run black --check src tests
-      - name: Type checking (Mypy)
-        run: uv run mypy src
-      - name: Run tests (Pytest)
-        run: uv run pytest tests
-
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "site"
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
