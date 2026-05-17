@@ -9,10 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
-# Aquimod2 files
-CHexample/
-CFexample/
-Aquimod2_manual/
+# Pytest & MyPy
+.pytest_cache/
+.mypy_cache/
+.coverage
 
-# Gemini
-GEMINI.md
+# MkDocs
+site/
+EOF
