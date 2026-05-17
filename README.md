@@ -1,9 +1,7 @@
 # aquimodpy
-
 A Python wrapper for the British Geological Survey's **AquiMod 2**, a lumped parameter groundwater model.
 
 ## Features
-
 - **IDE Support**: Full autocompletion and parameter validation in modern editors.
 - **Modular Design**: Support for all Soil Zone (FAO, NSSS, SMAP), Unsaturated Zone (Weibull), and Saturated Zone (Q3K3S1, VKD, SA1D, etc.) components.
 - **Automated Configuration**: Generates all required input files (`Input.txt`, `Observations.txt`, and component-specific parameter files) with correct Windows-style formatting for Wine compatibility.
@@ -12,7 +10,6 @@ A Python wrapper for the British Geological Survey's **AquiMod 2**, a lumped par
 - **Data Integration**: Seamless integration with Pandas for observation input and result parsing.
 
 ## Installation
-
 ```bash
 # Using pip
 pip install aquimodpy
@@ -21,8 +18,10 @@ pip install aquimodpy
 uv add aquimodpy
 ```
 
-## Quick Start
+## Documentation
+* [Latest release](https://afc98.github.io/aquimodpy/)
 
+## Quick Start
 ```python
 import pandas as pd
 from aquimodpy import Model, FAO, Weibull, Q3K3S1, Observations, EvaluationRunner
@@ -113,7 +112,6 @@ model.set_simulation_mode('s', n_loops=100, n_complexes=50, variable='g')
 ```
 
 ## License and Attribution
-
 This library is licensed under the **MIT License**.
 
 This project provides a wrapper for **AquiMod 2**, which is owned by the British Geological Survey (BGS) and is licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
