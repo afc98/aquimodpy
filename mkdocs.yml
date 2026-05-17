@@ -20,6 +20,7 @@ plugins:
             show_if_no_docstring: true
             show_bases: true
             show_source: true
+            show_submodules: true
 
 
 markdown_extensions:
