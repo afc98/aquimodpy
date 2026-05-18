@@ -1,6 +1,6 @@
 [project]
 name = "aquimodpy"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python wrapper for Aquimod 2"
 authors = [{name = "Arran Clarke"}]
 license = {text = "MIT"}
