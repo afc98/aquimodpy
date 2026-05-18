@@ -7,8 +7,8 @@ from aquimodpy.Model import Model
 def test_model_path_expansion():
     model = Model("Test", "~/test_exe", "~/test_dir")
     # Expanding ~ should happen
-    assert model.executable_path.startswith("/")
-    assert model.working_directory.startswith("/")
+    assert os.path.isabs(model.executable_path)
+    assert os.path.isabs(model.working_directory)
     assert "test_exe" in model.executable_path
 
 
