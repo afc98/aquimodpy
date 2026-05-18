@@ -638,61 +638,17 @@ class Observations:
         # Required columns for the output file
         headings = ["DAY", "MONTH", "YEAR", "RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]
 
-        # Check for NaNs in required continuous columns
-        for col in ["RAIN", "PET"]:
-            if df[col].isnull().any():
-                raise ValueError(
-                    f"Column '{col}' contains missing values (NaNs). "
-                    "Continuous values are required for RAIN and PET."
-                )
+        # Validate numeric types and check for NaNs in required continuous columns
+        for col in ["RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]:
+            if col in df.columns:
+                if not pd.api.types.is_numeric_dtype(df[col]):
+                    raise TypeError(f"Column '{col}' must be numeric.")
 
-        df["DATE"] = pd.to_datetime(df["DATE"])
-
-        # Create date component columns
-        df["DAY"] = df["DATE"].dt.day
-        df["MONTH"] = df["DATE"].dt.month
-        df["YEAR"] = df["DATE"].dt.year
-
-        # Define default fill values for missing columns or NaNs
-        fill_values = {"SOIL_VWC": -9999, "GWL": -9999, "ABS": 0}
-
-        # Ensure all required headings are present and fill missing values
-        for col in headings:
-            if col in ["DAY", "MONTH", "YEAR", "RAIN", "PET"]:
-                continue
-            if col not in df.columns:
-                df[col] = fill_values[col]
-            else:
-                df[col] = df[col].fillna(fill_values[col])
-
-        # Define output file path
-        out_file = os.path.join(self.model.working_directory, "Observations.txt")
-
-        # Write to file with CRLF for Windows/Wine compatibility
-        with open(out_file, "w", newline="") as f:
-            f.write("NUMBER OF OBSERVATIONS\r\n")
-            f.write(f"{len(df)}\r\n")
-            # Aquimod 2 expects tab-separated values in Observations.txt
-            df[headings].to_csv(
-                f, sep="\t", index=False, header=True, lineterminator="\r\n"
-            )
-        # Create a working copy for processing
-        df = self.obs_df.copy()
-
-        # Map user columns to standard names used by the model
-        rename_map = {v: k for k, v in self.columns.items()}
-        df = df.rename(columns=rename_map)
-
-        # Required columns for the output file
-        headings = ["DAY", "MONTH", "YEAR", "RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]
-
-        # Check for NaNs in required continuous columns
-        for col in ["RAIN", "PET"]:
-            if df[col].isnull().any():
-                raise ValueError(
-                    f"Column '{col}' contains missing values (NaNs). "
-                    "Continuous values are required for RAIN and PET."
-                )
+                if col in ["RAIN", "PET"] and df[col].isnull().any():
+                    raise ValueError(
+                        f"Column '{col}' contains missing values (NaNs). "
+                        "Continuous values are required for RAIN and PET."
+                    )
 
         df["DATE"] = pd.to_datetime(df["DATE"])
 
