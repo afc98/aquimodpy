@@ -1,4 +1,10 @@
 # aquimodpy
+
+[![PyPI version](https://img.shields.io/pypi/v/aquimodpy.svg)](https://pypi.org/project/aquimodpy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/aquimodpy.svg)](https://pypi.org/project/aquimodpy/)
+[![CI status](https://github.com/afc98/aquimodpy/actions/workflows/ci.yml/badge.svg)](https://github.com/afc98/aquimodpy/actions/workflows/ci.yml)
+[![License](https://img.shields.io/pypi/l/aquimodpy.svg)](https://github.com/afc98/aquimodpy/blob/master/LICENSE)
+
 A Python wrapper for the British Geological Survey's **AquiMod 2**, a lumped parameter groundwater model.
 
 ## Features
