@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -12,10 +15,13 @@ jobs:
         with:
           enable-cache: true
       - name: Set up Python
-        run: uv python install 3.14
+        run: uv python install ${{ matrix.python-version }}
       - name: Install dependencies and package
         run: uv sync --all-groups
+      - name: Run tests
+        run: uv run pytest
       - name: Build documentation
+        if: matrix.python-version == '3.14'
         run: |
           uv pip install .
           uv run mkdocs build --verbose
