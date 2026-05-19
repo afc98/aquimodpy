@@ -26,6 +26,7 @@ jobs:
           uv pip install .
           uv run mkdocs build --verbose
       - name: Upload pages artifact
+        if: matrix.python-version == '3.14'
         uses: actions/upload-pages-artifact@v3
         with:
           path: "site"
