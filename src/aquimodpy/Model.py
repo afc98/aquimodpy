@@ -29,6 +29,11 @@ class Model:
         executable_path: str,
         working_directory: str,
         exec_prefix: Optional[List[str]] = None,
+        *,
+        simulation_mode: str = "e",
+        spinup_time: int = 365,
+        obj_func: Optional[List[Any]] = None,
+        output_switches: Optional[List[bool]] = None,
     ) -> None:
         """Initializes the model.
 
@@ -37,6 +42,10 @@ class Model:
             executable_path (str): Path to the AquiMod 2 binary.
             working_directory (str): Path to the working directory.
             exec_prefix (List[str], optional): Command prefix for running the binary (e.g., ["wine"]). Defaults to None.
+            simulation_mode (str): 'e' (evaluation), 'm' (Monte Carlo), or 's' (SCE-UA). Defaults to 'e'.
+            spinup_time (int): Number of days for simulation spin-up. Defaults to 365.
+            obj_func (List[Any], optional): Objective function ID and parameters. Defaults to [1].
+            output_switches (List[bool], optional): Which component output files to write [soil, unsat, sat]. Defaults to [True, True, True].
         """
         import os
 
@@ -54,11 +63,13 @@ class Model:
         self.observations: Optional["Observations"] = None
         self.runner: Optional["Runner"] = None
 
-        # Default settings
-        self.simulation_mode: str = "e"
-        self.spinup_time: int = 365
-        self.obj_func: List[Any] = [1]
-        self.output_switches: List[bool] = [True, True, True]
+        # Configuration parameters
+        self.simulation_mode: str = simulation_mode
+        self.spinup_time: int = spinup_time
+        self.obj_func: List[Any] = obj_func if obj_func is not None else [1]
+        self.output_switches: List[bool] = (
+            output_switches if output_switches is not None else [True, True, True]
+        )
 
         # Simulation specific parameters (defaults)
         self.mc_params: List[Any] = [10000, 0.5, 100, "g"]

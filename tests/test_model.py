@@ -18,6 +18,9 @@ def test_simulation_mode_config():
     # Test evaluation mode (default)
     assert model.simulation_mode == "e"
     assert model.eval_params == [1, "g"]
+    assert model.spinup_time == 365
+    assert model.obj_func == [1]
+    assert model.output_switches == [True, True, True]
 
     # Test MC mode
     model.set_simulation_mode("m", n_runs=500, threshold=0.8, variable="s")
@@ -28,6 +31,22 @@ def test_simulation_mode_config():
     model.set_simulation_mode("s", n_loops=10, n_complexes=5)
     assert model.simulation_mode == "s"
     assert model.sce_params == [10, 5, -1, -1, "g"]
+
+
+def test_model_init_with_params():
+    model = Model(
+        "Test",
+        "exe",
+        "dir",
+        simulation_mode="m",
+        spinup_time=500,
+        obj_func=[2, 0.5],
+        output_switches=[True, False, True],
+    )
+    assert model.simulation_mode == "m"
+    assert model.spinup_time == 500
+    assert model.obj_func == [2, 0.5]
+    assert model.output_switches == [True, False, True]
 
 
 def test_objective_function_config():
