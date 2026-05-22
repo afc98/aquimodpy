@@ -10,7 +10,7 @@ def tests(session):
     # Install the current package and its dependencies using uv
     session.install(".")
     # Install test dependencies
-    session.install("pytest", "pytest-cov", "matplotlib")
+    session.install("pytest", "pytest-cov")
     
     # Run pytest
     # posargs allows passing extra arguments to pytest, e.g., nox -s tests -- -v
