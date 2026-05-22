@@ -1,7 +1,29 @@
+from typing import Any
 import pytest
 import os
 from aquimodpy.Model import Model
-from aquimodpy.Components import FAO, Weibull, Q1K1S1
+from aquimodpy.Components import FAO, Weibull, Q1K1S1, SoilZone, Component
+
+
+class DummyComponent(SoilZone):
+    REQUIRED_PARAMETERS = ["param1"]
+    MAP = {"p1": "param1"}
+
+    def __init__(self, model: Model, component_id: int = 1, **kwargs: Any) -> None:
+        super().__init__(model, component_id, **kwargs)
+
+
+def test_component_base_missing_params():
+    model = Model("Test", "exe", "dir")
+    with pytest.raises(ValueError, match="Missing required parameters"):
+        DummyComponent(model, 1, p2="wrong")
+
+
+def test_component_unfriendly_names():
+    model = Model("Test", "exe", "dir")
+    # Passing "param1" directly instead of "p1"
+    c = DummyComponent(model, 1, param1=10)
+    assert c.parameters["param1"] == 10
 
 
 def test_component_validation():
