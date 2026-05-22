@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import os
+import subprocess
 
 if TYPE_CHECKING:
     from .Model import Model
@@ -79,8 +80,6 @@ class Runner:
 
     def run(self) -> None:
         """Executes the simulation."""
-        import subprocess
-
         print(
             f"Running {self.model.simulation_mode} for model: {self.model.model_name}"
         )

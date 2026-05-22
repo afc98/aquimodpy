@@ -90,3 +90,43 @@ def test_observations_missing_date():
 
     with pytest.raises(KeyError, match="Mapped DATE column 'DATE' missing"):
         Observations(model, df, {"DATE": "DATE"})
+
+
+def test_observations_invalid_date_type(tmp_path):
+    model = Model("Test", "exe", str(tmp_path))
+    df = pd.DataFrame(
+        {"DATE": ["not-a-date", "2020-01-01"], "RAIN": [1, 2], "PET": [0.1, 0.2]}
+    )
+    obs = Observations(model, df, {"DATE": "DATE", "RAIN": "RAIN", "PET": "PET"})
+    with pytest.raises((ValueError, TypeError)):
+        obs.write_obs_file()
+
+
+def test_observations_invalid_numeric_type(tmp_path):
+    model = Model("Test", "exe", str(tmp_path))
+    # RAIN is string
+    df = pd.DataFrame(
+        {
+            "DATE": pd.date_range("2020-01-01", periods=2),
+            "RAIN": ["high", 2],
+            "PET": [0.1, 0.2],
+        }
+    )
+    obs = Observations(model, df, {"DATE": "DATE", "RAIN": "RAIN", "PET": "PET"})
+    with pytest.raises(TypeError, match="Column 'RAIN' must be numeric"):
+        obs.write_obs_file()
+
+    # Optional column GWL is string
+    df2 = pd.DataFrame(
+        {
+            "DATE": pd.date_range("2020-01-01", periods=2),
+            "RAIN": [1, 2],
+            "PET": [0.1, 0.2],
+            "GWL": ["A", "B"],
+        }
+    )
+    obs2 = Observations(
+        model, df2, {"DATE": "DATE", "RAIN": "RAIN", "PET": "PET", "GWL": "GWL"}
+    )
+    with pytest.raises(TypeError, match="Column 'GWL' must be numeric"):
+        obs2.write_obs_file()

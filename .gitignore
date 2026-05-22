@@ -8,11 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
+.nox/
 
 # Pytest & MyPy
 .pytest_cache/
 .mypy_cache/
 .coverage
+htmlcov/
 
 # MkDocs
 site/

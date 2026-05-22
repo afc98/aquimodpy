@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 import pandas as pd
 import os
 import warnings
+from .Components import SoilZone, UnsatZone, SatZone
 
 if TYPE_CHECKING:
     from .Components import Component, SoilZone, UnsatZone, SatZone, Observations
@@ -15,12 +16,19 @@ class Model:
         model_name (str): Name of the simulation.
         executable_path (str): Absolute path to the AquiMod 2 binary.
         working_directory (str): Absolute path to the simulation working directory.
-        use_wine (bool): Whether to use Wine for binary execution on Linux.
-        soil_zone: Soil zone component instance.
-        unsat_zone: Unsaturated zone component instance.
-        sat_zone: Saturated zone component instance.
-        observations: Observations component instance.
-        runner: Runner instance (e.g., CalibrationRunner, EvaluationRunner).
+        exec_prefix (List[str]): Command prefix for running the binary.
+        soil_zone (SoilZone, optional): Soil zone component instance.
+        unsat_zone (UnsatZone, optional): Unsaturated zone component instance.
+        sat_zone (SatZone, optional): Saturated zone component instance.
+        observations (Observations, optional): Observations component instance.
+        runner (Runner, optional): Runner instance (e.g., CalibrationRunner, EvaluationRunner).
+        simulation_mode (str): 'e' (evaluation), 'm' (Monte Carlo), or 's' (SCE-UA).
+        spinup_time (int): Number of days for simulation spin-up.
+        obj_func (List[Any]): Objective function ID and parameters.
+        output_switches (List[bool]): Which component output files to write [soil, unsat, sat].
+        mc_params (List[Any]): Parameters for Monte Carlo simulation.
+        sce_params (List[Any]): Parameters for SCE-UA simulation.
+        eval_params (List[Any]): Parameters for evaluation simulation.
     """
 
     def __init__(
@@ -29,6 +37,11 @@ class Model:
         executable_path: str,
         working_directory: str,
         exec_prefix: Optional[List[str]] = None,
+        *,
+        simulation_mode: str = "e",
+        spinup_time: int = 365,
+        obj_func: Optional[List[Any]] = None,
+        output_switches: Optional[List[bool]] = None,
     ) -> None:
         """Initializes the model.
 
@@ -37,8 +50,11 @@ class Model:
             executable_path (str): Path to the AquiMod 2 binary.
             working_directory (str): Path to the working directory.
             exec_prefix (List[str], optional): Command prefix for running the binary (e.g., ["wine"]). Defaults to None.
+            simulation_mode (str): 'e' (evaluation), 'm' (Monte Carlo), or 's' (SCE-UA). Defaults to 'e'.
+            spinup_time (int): Number of days for simulation spin-up. Defaults to 365.
+            obj_func (List[Any], optional): Objective function ID and parameters. Defaults to [1].
+            output_switches (List[bool], optional): Which component output files to write [soil, unsat, sat]. Defaults to [True, True, True].
         """
-        import os
 
         self.model_name: str = model_name
         self.executable_path: str = os.path.abspath(os.path.expanduser(executable_path))
@@ -54,11 +70,13 @@ class Model:
         self.observations: Optional["Observations"] = None
         self.runner: Optional["Runner"] = None
 
-        # Default settings
-        self.simulation_mode: str = "e"
-        self.spinup_time: int = 365
-        self.obj_func: List[Any] = [1]
-        self.output_switches: List[bool] = [True, True, True]
+        # Configuration parameters
+        self.simulation_mode: str = simulation_mode
+        self.spinup_time: int = spinup_time
+        self.obj_func: List[Any] = obj_func if obj_func is not None else [1]
+        self.output_switches: List[bool] = (
+            output_switches if output_switches is not None else [True, True, True]
+        )
 
         # Simulation specific parameters (defaults)
         self.mc_params: List[Any] = [10000, 0.5, 100, "g"]
@@ -77,13 +95,11 @@ class Model:
         """Categorizes and stores the component.
 
         Args:
-            component: An instance of a model component (SoilZone, UnsatZone, or SatZone).
+            component (Component): An instance of a model component (SoilZone, UnsatZone, or SatZone).
 
         Raises:
             ValueError: If the component type is unknown.
         """
-        from .Components import SoilZone, UnsatZone, SatZone
-        import warnings
 
         if isinstance(component, SoilZone):
             if self.soil_zone is not None:
@@ -169,7 +185,7 @@ class Model:
         """Updates component parameters from calibration results.
 
         Args:
-            calibration_results (dict): Dictionary of DataFrames returned by get_results().
+            calibration_results (Dict[str, pd.DataFrame]): Dictionary of DataFrames returned by get_results().
             index (int, optional): The row index in the results DataFrames to load. Defaults to 0.
         """
         mapping = [
@@ -186,8 +202,6 @@ class Model:
                         str(k): v for k, v in df.iloc[index].to_dict().items()
                     }
                 else:
-                    import warnings
-
                     warnings.warn(
                         f"Could not load parameters for {key}: result is empty or index out of range."
                     )
@@ -214,11 +228,8 @@ class Model:
             run_number (int, optional): Run number for time series. Defaults to 1.
 
         Returns:
-            dict: Dictionary of DataFrames containing model outputs.
+            Dict[str, pd.DataFrame]: Dictionary of DataFrames containing model outputs.
         """
-        import pandas as pd
-        import os
-
         output_dir = os.path.join(self.working_directory, "Output")
         results: Dict[str, pd.DataFrame] = {}
 

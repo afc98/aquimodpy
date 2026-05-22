@@ -125,7 +125,7 @@ class NSSS(SoilZone):
         """Initializes the NSSS soil component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             theta_fc: Field capacity moisture content (-).
             theta_wp: Wilting point moisture content (-).
             Z_r: Rooting depth (mm).
@@ -187,7 +187,7 @@ class SMAP(SoilZone):
         """Initializes the SMAP soil component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             theta_fc: Field capacity moisture content (-).
             theta_wp: Wilting point moisture content (-).
             Z_r: Rooting depth (mm).
@@ -229,7 +229,7 @@ class Weibull(UnsatZone):
         """Initializes the Weibull unsaturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             k: Weibull shape parameter (-).
             lambda_: Weibull scale parameter (-).
         """
@@ -284,7 +284,7 @@ class Q3K3S1(SatZone):
         """Initializes the Q3K3S1 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K3: Hydraulic conductivity of layer 3 (m/day).
             K2: Hydraulic conductivity of layer 2 (m/day).
@@ -336,7 +336,7 @@ class Q2K2S1(SatZone):
         """Initializes the Q2K2S1 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K2: Hydraulic conductivity of layer 2 (m/day).
             K1: Hydraulic conductivity of layer 1 (m/day).
@@ -366,7 +366,7 @@ class Q1K1S1(SatZone):
         """Initializes the Q1K1S1 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K1: Hydraulic conductivity of layer 1 (m/day).
             S: Storage coefficient (-).
@@ -388,7 +388,7 @@ class Q1T1S1(SatZone):
         """Initializes the Q1T1S1 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             T1: Transmissivity of layer 1 (m2/day).
             S: Storage coefficient (-).
@@ -430,7 +430,7 @@ class VKD(SatZone):
         """Initializes the VKD saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K1: Hydraulic conductivity (m/day).
             m: Drainage parameter (day^-1).
@@ -489,7 +489,7 @@ class Q3K3S3(SatZone):
         """Initializes the Q3K3S3 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K3: Hydraulic conductivity of layer 3 (m/day).
             K2: Hydraulic conductivity of layer 2 (m/day).
@@ -558,7 +558,7 @@ class Q2K2S2(SatZone):
         """Initializes the Q2K2S2 saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             dx: Grid spacing (m).
             K2: Hydraulic conductivity of layer 2 (m/day).
             K1: Hydraulic conductivity of layer 1 (m/day).
@@ -583,7 +583,7 @@ class SA1D(SatZone):
         """Initializes the SA1D saturated zone component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             A: Area (m2).
             k: Drainage coefficient (day^-1).
             z1: Bottom depth of layer 1 (m).
@@ -601,7 +601,7 @@ class Observations:
         """Initializes Observations component.
 
         Args:
-            model: The Model instance.
+            model (Model): The Model instance.
             obs_df: Pandas DataFrame containing observations.
             columns: Dictionary mapping required model columns to user DataFrame columns.
                      Required keys: DATE, RAIN, PET.
@@ -638,63 +638,21 @@ class Observations:
         # Required columns for the output file
         headings = ["DAY", "MONTH", "YEAR", "RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]
 
-        # Check for NaNs in required continuous columns
-        for col in ["RAIN", "PET"]:
-            if df[col].isnull().any():
-                raise ValueError(
-                    f"Column '{col}' contains missing values (NaNs). "
-                    "Continuous values are required for RAIN and PET."
-                )
+        # Validate numeric types and check for NaNs in required continuous columns
+        for col in ["RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]:
+            if col in df.columns:
+                if not pd.api.types.is_numeric_dtype(df[col]):
+                    raise TypeError(f"Column '{col}' must be numeric.")
 
-        df["DATE"] = pd.to_datetime(df["DATE"])
+                if col in ["RAIN", "PET"] and df[col].isnull().any():
+                    raise ValueError(
+                        f"Column '{col}' contains missing values (NaNs). "
+                        "Continuous values are required for RAIN and PET."
+                    )
 
-        # Create date component columns
-        df["DAY"] = df["DATE"].dt.day
-        df["MONTH"] = df["DATE"].dt.month
-        df["YEAR"] = df["DATE"].dt.year
-
-        # Define default fill values for missing columns or NaNs
-        fill_values = {"SOIL_VWC": -9999, "GWL": -9999, "ABS": 0}
-
-        # Ensure all required headings are present and fill missing values
-        for col in headings:
-            if col in ["DAY", "MONTH", "YEAR", "RAIN", "PET"]:
-                continue
-            if col not in df.columns:
-                df[col] = fill_values[col]
-            else:
-                df[col] = df[col].fillna(fill_values[col])
-
-        # Define output file path
-        out_file = os.path.join(self.model.working_directory, "Observations.txt")
-
-        # Write to file with CRLF for Windows/Wine compatibility
-        with open(out_file, "w", newline="") as f:
-            f.write("NUMBER OF OBSERVATIONS\r\n")
-            f.write(f"{len(df)}\r\n")
-            # Aquimod 2 expects tab-separated values in Observations.txt
-            df[headings].to_csv(
-                f, sep="\t", index=False, header=True, lineterminator="\r\n"
-            )
-        # Create a working copy for processing
-        df = self.obs_df.copy()
-
-        # Map user columns to standard names used by the model
-        rename_map = {v: k for k, v in self.columns.items()}
-        df = df.rename(columns=rename_map)
-
-        # Required columns for the output file
-        headings = ["DAY", "MONTH", "YEAR", "RAIN", "PET", "SOIL_VWC", "GWL", "ABS"]
-
-        # Check for NaNs in required continuous columns
-        for col in ["RAIN", "PET"]:
-            if df[col].isnull().any():
-                raise ValueError(
-                    f"Column '{col}' contains missing values (NaNs). "
-                    "Continuous values are required for RAIN and PET."
-                )
-
-        df["DATE"] = pd.to_datetime(df["DATE"])
+        df["DATE"] = pd.to_datetime(df["DATE"], format="mixed", errors="coerce")
+        if df["DATE"].isnull().any():
+            raise ValueError("DATE column contains invalid or missing dates.")
 
         # Create date component columns
         df["DAY"] = df["DATE"].dt.day
