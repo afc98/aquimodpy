@@ -650,7 +650,9 @@ class Observations:
                         "Continuous values are required for RAIN and PET."
                     )
 
-        df["DATE"] = pd.to_datetime(df["DATE"])
+        df["DATE"] = pd.to_datetime(df["DATE"], format="mixed", errors="coerce")
+        if df["DATE"].isnull().any():
+            raise ValueError("DATE column contains invalid or missing dates.")
 
         # Create date component columns
         df["DAY"] = df["DATE"].dt.day
