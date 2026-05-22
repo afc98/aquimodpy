@@ -11,7 +11,7 @@ A Python wrapper for the British Geological Survey's **AquiMod 2**, a lumped par
 - **IDE Support**: Full autocompletion and parameter validation in modern editors.
 - **Modular Design**: Support for all Soil Zone (FAO, NSSS, SMAP), Unsaturated Zone (Weibull), and Saturated Zone (Q3K3S1, VKD, SA1D, etc.) components.
 - **Automated Configuration**: Generates all required input files (`Input.txt`, `Observations.txt`, and component-specific parameter files) with correct Windows-style formatting for Wine compatibility.
-- **Simulation Modes**: Full support for Evaluation, Monte Carlo calibration, and SCE-UA global optimization.
+- **Simulation Modes**: Full support for Evaluation, Monte Carlo calibration, and SCE-UA global optimisation.
 - **Cross-Platform**: Flexible execution support; specify your preferred command prefix (e.g., `["wine"]`, `["box86"]`) for running the Windows binary on non-Windows systems.
 - **Data Integration**: Seamless integration with Pandas for observation input and result parsing.
 
@@ -32,7 +32,7 @@ uv add aquimodpy
 import pandas as pd
 from aquimodpy import Model, FAO, Weibull, Q3K3S1, Observations, EvaluationRunner
 
-# 1. Initialize the model
+# 1. Initialise the model
 model = Model(
     model_name="MySimulation",
     executable_path="~/Documents/AquiMod2/AquiMod2.exe",
@@ -84,12 +84,12 @@ model.set_runner(EvaluationRunner(model))
 model.setup()
 model.run()
 
-# 5. Analyze results
+# 5. Analyse results
 results = model.get_results()
 print(results['Sat'].head())
 ```
 
-## Calibration and Optimization
+## Calibration and Optimisation
 
 ### Monte Carlo Calibration
 
@@ -111,7 +111,7 @@ FAO(
 )
 ```
 
-### SCE-UA Optimization
+### SCE-UA Optimisation
 
 ```python
 model.set_simulation_mode('s', n_loops=100, n_complexes=50, variable='g')
