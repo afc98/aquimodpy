@@ -37,11 +37,10 @@ model = Model(
     model_name="MySimulation",
     executable_path="~/Documents/AquiMod2/AquiMod2.exe",
     working_directory="./simulation_results",
-    exec_prefix=["wine"]  # Use ["wine"] for Linux or [] for native Windows
+    exec_prefix=["wine"]  # Use ["wine"] for Linux
 )
 
 # 2. Add components using named arguments
-# Units and special characters are handled automatically!
 FAO(
     model,
     theta_fc=0.4,
