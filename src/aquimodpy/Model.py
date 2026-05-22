@@ -198,6 +198,16 @@ class Model:
             if comp and key in calibration_results:
                 df = calibration_results[key]
                 if not df.empty and index < len(df):
+                    # Validate parameters
+                    params_in_df = df.columns
+                    missing_params = [
+                        p for p in comp.REQUIRED_PARAMETERS if p not in params_in_df
+                    ]
+                    if missing_params:
+                        raise ValueError(
+                            f"Invalid parameters for {key}: Missing {missing_params}"
+                        )
+
                     comp.parameters = {
                         str(k): v for k, v in df.iloc[index].to_dict().items()
                     }

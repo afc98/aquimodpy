@@ -234,3 +234,14 @@ def test_model_get_results_file_not_found(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Warning: Time series file" in captured.out
     assert "Soil" not in results
+
+
+def test_model_load_parameters_invalid_df_data():
+    model = Model("Test", "exe", "dir")
+    FAO(model, 0.4, 0.1, 1000, 0.5, 0.8)
+
+    # Passing a DataFrame that doesn't have valid parameters expected by the component
+    df = pd.DataFrame([{"invalid_param": 0.35}])
+
+    with pytest.raises(ValueError, match="Invalid parameters"):
+        model.load_parameters({"Soil_Params": df}, index=0)
