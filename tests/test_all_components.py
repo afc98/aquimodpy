@@ -125,7 +125,9 @@ def test_sat_components_ordering():
 
     # Q2K2S2
     with pytest.warns(UserWarning, match="Replacing existing SatZone component"):
-        q2k2s2 = Q2K2S2(model, dx=3000, K2=5, K1=1, S2=0.01, S1=0.01, z2=40, z1=30, alpha=1)
+        q2k2s2 = Q2K2S2(
+            model, dx=3000, K2=5, K1=1, S2=0.01, S1=0.01, z2=40, z1=30, alpha=1
+        )
     assert q2k2s2.REQUIRED_PARAMETERS[1:3] == ["S_2(-)", "S_1(-)"]
 
     # SA1D

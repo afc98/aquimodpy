@@ -21,7 +21,7 @@ def lint(session):
     """Run static analysis and formatting checks."""
     session.install("black", "mypy", "pandas-stubs")
     session.install(".")
-    session.run("black", "--check", "src", "tests")
+    session.run("black", "--check", "--target-version", "py312", "src", "tests")
     session.run("mypy", "src")
 
 @nox.session(python="3.14")
