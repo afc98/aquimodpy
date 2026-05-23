@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -19,7 +19,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
       - name: Run nox
-        run: uv run nox -s tests-${{ matrix.python-version }}
+        # Note: Nox sessions in noxfile are named like 'tests', not 'tests-3.12'
+        # The workflow seems to assume the sessions are parameterized. 
+        # I will change it to call 'tests' session and let nox handle it.
+        run: uv run nox -s tests
   
   lint:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
         with:
           enable-cache: true
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.11
       - name: Install dependencies
         run: uv sync --all-groups
       - name: Run lint
