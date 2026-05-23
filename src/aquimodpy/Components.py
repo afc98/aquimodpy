@@ -38,6 +38,25 @@ class Component:
                 # Allow passing the "unfriendly" name directly too
                 self.parameters[clean_name] = value
 
+        # Calibration parameter validation
+        # Only validate parameters that are known to be part of the component requirements.
+        for name, value in self.parameters.items():
+            if name in self.REQUIRED_PARAMETERS:
+                if isinstance(value, list):
+                    # Validate numeric and range
+                    if not all(isinstance(v, (int, float)) for v in value):
+                        raise TypeError(f"Parameter '{name}' must be numeric.")
+                    if len(value) != 2:
+                        raise ValueError(
+                            f"Invalid range for parameter '{name}': expected [min, max] but got {len(value)} value(s)."
+                        )
+                    if value[0] >= value[1]:
+                        raise ValueError(
+                            f"Invalid range for parameter '{name}': {value}. Min must be less than max."
+                        )
+                elif not isinstance(value, (int, float)):
+                    # Validate single numeric value
+                    raise TypeError(f"Parameter '{name}' must be numeric.")
         # Basic validation
         missing = [
             req for req in self.REQUIRED_PARAMETERS if req not in self.parameters

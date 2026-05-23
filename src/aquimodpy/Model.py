@@ -272,7 +272,7 @@ class Model:
                     if os.path.exists(file_path):
                         results[type_name] = pd.read_csv(file_path, sep=r"\s+")
                     else:
-                        print(f"Warning: Time series file {file_path} not found.")
+                        warnings.warn(f"Time series file {file_path} not found.")
 
         # Also read fit_eval.out or fit_calib.out depending on mode
         fit_file = "fit_eval.out" if self.simulation_mode == "e" else "fit_calib.out"
