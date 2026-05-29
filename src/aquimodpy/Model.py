@@ -43,7 +43,7 @@ class Model:
         obj_func: Optional[List[Any]] = None,
         output_switches: Optional[List[bool]] = None,
     ) -> None:
-        """Initializes the model.
+        """Initialises the model.
 
         Args:
             model_name (str): Name of the simulation.
@@ -92,7 +92,7 @@ class Model:
         self.runner = runner
 
     def add_component(self, component: "Component") -> None:
-        """Categorizes and stores the component.
+        """Categorises and stores the component.
 
         Args:
             component (Component): An instance of a model component (SoilZone, UnsatZone, or SatZone).

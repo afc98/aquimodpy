@@ -27,95 +27,68 @@ uv add aquimodpy
 ## Documentation
 * [Latest release](https://afc98.github.io/aquimodpy/)
 
-## Quick Start
+## Workflow Example: Calibration to Evaluation
+
+This example demonstrates a complete real-world workflow: defining parameter ranges, running a Monte Carlo calibration, selecting the best parameter set, and performing a final evaluation.
+
 ```python
 import pandas as pd
-from aquimodpy import Model, FAO, Weibull, Q3K3S1, Observations, EvaluationRunner
+import matplotlib.pyplot as plt
+from aquimodpy import Model, FAO, Weibull, Q3K3S1, Observations, CalibrationRunner, EvaluationRunner
 
-# 1. Initialise the model
+# 1. Initialise Model & Define Components
+# We specify ranges [min, max] for parameters we want to calibrate
 model = Model(
     model_name="MySimulation",
-    executable_path="~/Documents/AquiMod2/AquiMod2.exe",
-    working_directory="./simulation_results",
-    exec_prefix=["wine"],  # Use ["wine"] for Linux
-    spinup_time=24, # Number of time steps in spinup period
+    executable_path="~/AquiMod2/AquiMod2.exe",
+    working_directory="./sim_results",
+    exec_prefix=["wine"] # Required for Linux
 )
 
-# 2. Add components using named arguments
-FAO(
-    model,
-    theta_fc=0.4,
-    theta_wp=0.1,
-    Z_r=1000,
-    p=0.5,
-    BFI=0.8
-)
+FAO(model, theta_fc=0.3, theta_wp=0.1, Z_r=[500, 2500], p=0.5, BFI=[0.1, 0.9])
+Weibull(model, k=[0.5, 5.0], lambda_=10.0)
+Q3K3S1(model, dx=1000, K3=10, K2=5, K1=1, S=[1e-4, 1e-2], z3=50, z2=40, z1=30, alpha=1)
 
-Weibull(
-    model,
-    k=2.0,
-    lambda_=5.0 # Use lambda_ as 'lambda' is a Python keyword
-)
-
-Q3K3S1(
-    model,
-    dx=1000,
-    K3=10,
-    K2=5,
-    K1=1,
-    S=0.01,
-    z3=50,
-    z2=40,
-    z1=30,
-    alpha=1
-)
-
-# 3. Add observations and map column names
-df = pd.read_csv("my_data.csv")
+# 2. Load Forcing Data and Observations
+df = pd.read_csv("my_data.csv", parse_dates=["date"])
 Observations(model, df, {
-    "DATE": "date_col",
-    "RAIN": "rainfall_mm",
-    "PET": "pet_mm",
-    "GWL": "gw_level_m"
+    "DATE": "date", 
+    "RAIN": "rainfall_mm", 
+    "PET": "pet_mm", 
+    "GWL": "observed_gwl_m"
 })
 
-# 4. Configure and run
-model.set_runner(EvaluationRunner(model))
+# 3. Step 1: Run Monte Carlo Calibration
+model.set_runner(CalibrationRunner(model))
+model.set_simulation_mode('m', n_runs=10000)
 model.setup()
 model.run()
 
-# 5. Analyse results
+# 4. Step 2: Load the Best Parameter Set
+# Find the run with the highest Nash-Sutcliffe Efficiency (NSE)
+calib_results = model.get_results()
+best_run_idx = calib_results['Fit']['NSE'].idxmax()
+model.load_parameters(calib_results, index=best_run_idx)
+
+# 5. Step 3: Run Final Evaluation (Historical Simulation)
+model.set_runner(EvaluationRunner(model))
+model.set_simulation_mode('e')
+model.setup()
+model.run()
+
+# 6. Analyse and Plot Results
 results = model.get_results()
-print(results['Sat'].head())
+sim_gwl = results['Sat']  # Saturated zone time series
+
+print(f"Optimal parameters loaded. NSE: {calib_results['Fit']['NSE'].max():.2f}")
+print(sim_gwl.head())
+
+# Optional: Plotting with Matplotlib
+# plt.plot(df['date'], df['observed_gwl_m'], 'k.', label='Observed')
+# plt.plot(df['date'], sim_gwl['Head(m)'], 'r-', label='Simulated')
+# plt.show()
 ```
 
-## Calibration and Optimisation
-
-### Monte Carlo Calibration
-
-Provide `[min, max]` lists for parameters you wish to calibrate.
-
-```python
-from aquimodpy import CalibrationRunner
-model.set_runner(CalibrationRunner(model))
-model.set_simulation_mode('m', n_runs=10000, threshold=0.5, variable='g')
-
-# Calibrate Z_r and BFI, keep others fixed
-FAO(
-    model,
-    theta_fc=0.35,
-    theta_wp=0.1,
-    Z_r=[500, 3000],
-    p=0.5,
-    BFI=[0.1, 0.99]
-)
-```
-
-### SCE-UA Optimisation
-
-```python
-model.set_simulation_mode('s', n_loops=100, n_complexes=50, variable='g')
-```
 
 ## License and Attribution
 This library is licensed under the **MIT License**.
