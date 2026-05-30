@@ -4,7 +4,7 @@ import nox
 nox.options.default_venv_backend = "uv"
 nox.options.sessions = ["tests", "lint"]
 
-@nox.session(python=["3.12", "3.13", "3.14"])
+@nox.session(python=["3.11", "3.12", "3.13", "3.14"])
 def tests(session):
     """Run the test suite across multiple Python versions."""
     # Install the current package and its dependencies using uv
@@ -16,12 +16,12 @@ def tests(session):
     # posargs allows passing extra arguments to pytest, e.g., nox -s tests -- -v
     session.run("pytest", *session.posargs)
 
-@nox.session(python="3.12")
+@nox.session(python=["3.11", "3.12"])
 def lint(session):
     """Run static analysis and formatting checks."""
     session.install("black", "mypy", "pandas-stubs")
     session.install(".")
-    session.run("black", "--check", "--target-version", "py312", "src", "tests")
+    session.run("black", "--check", "--target-version", "py311", "src", "tests")
     session.run("mypy", "src")
 
 @nox.session(python="3.14")

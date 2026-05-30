@@ -14,7 +14,7 @@ class Runner:
     """
 
     def __init__(self, model: "Model") -> None:
-        """Initializes the runner with a model instance.
+        """Initialises the runner with a model instance.
 
         Args:
             model (Model): The Model instance.

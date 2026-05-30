@@ -43,7 +43,7 @@ class Model:
         obj_func: Optional[List[Any]] = None,
         output_switches: Optional[List[bool]] = None,
     ) -> None:
-        """Initializes the model.
+        """Initialises the model.
 
         Args:
             model_name (str): Name of the simulation.
@@ -92,7 +92,7 @@ class Model:
         self.runner = runner
 
     def add_component(self, component: "Component") -> None:
-        """Categorizes and stores the component.
+        """Categorises and stores the component.
 
         Args:
             component (Component): An instance of a model component (SoilZone, UnsatZone, or SatZone).
@@ -198,6 +198,16 @@ class Model:
             if comp and key in calibration_results:
                 df = calibration_results[key]
                 if not df.empty and index < len(df):
+                    # Validate parameters
+                    params_in_df = df.columns
+                    missing_params = [
+                        p for p in comp.REQUIRED_PARAMETERS if p not in params_in_df
+                    ]
+                    if missing_params:
+                        raise ValueError(
+                            f"Invalid parameters for {key}: Missing {missing_params}"
+                        )
+
                     comp.parameters = {
                         str(k): v for k, v in df.iloc[index].to_dict().items()
                     }
@@ -262,7 +272,7 @@ class Model:
                     if os.path.exists(file_path):
                         results[type_name] = pd.read_csv(file_path, sep=r"\s+")
                     else:
-                        print(f"Warning: Time series file {file_path} not found.")
+                        warnings.warn(f"Time series file {file_path} not found.")
 
         # Also read fit_eval.out or fit_calib.out depending on mode
         fit_file = "fit_eval.out" if self.simulation_mode == "e" else "fit_calib.out"

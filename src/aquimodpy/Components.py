@@ -19,7 +19,7 @@ class Component:
     REQUIRED_PARAMETERS: List[str] = []
 
     def __init__(self, model: "Model", component_id: int, **kwargs: Any) -> None:
-        """Initializes a new component and registers it with the model.
+        """Initialises a new component and registers it with the model.
 
         Args:
             model (Model): The Model instance.
@@ -38,6 +38,25 @@ class Component:
                 # Allow passing the "unfriendly" name directly too
                 self.parameters[clean_name] = value
 
+        # Calibration parameter validation
+        # Only validate parameters that are known to be part of the component requirements.
+        for name, value in self.parameters.items():
+            if name in self.REQUIRED_PARAMETERS:
+                if isinstance(value, list):
+                    # Validate numeric and range
+                    if not all(isinstance(v, (int, float)) for v in value):
+                        raise TypeError(f"Parameter '{name}' must be numeric.")
+                    if len(value) != 2:
+                        raise ValueError(
+                            f"Invalid range for parameter '{name}': expected [min, max] but got {len(value)} value(s)."
+                        )
+                    if value[0] >= value[1]:
+                        raise ValueError(
+                            f"Invalid range for parameter '{name}': {value}. Min must be less than max."
+                        )
+                elif not isinstance(value, (int, float)):
+                    # Validate single numeric value
+                    raise TypeError(f"Parameter '{name}' must be numeric.")
         # Basic validation
         missing = [
             req for req in self.REQUIRED_PARAMETERS if req not in self.parameters
@@ -77,7 +96,7 @@ class FAO(SoilZone):
         p: float,
         BFI: float,
     ) -> None:
-        """Initializes the FAO soil component.
+        """Initialises the FAO soil component.
 
         Args:
             model (Model): The Model instance.
@@ -122,7 +141,7 @@ class NSSS(SoilZone):
         p: float,
         BFI: float,
     ) -> None:
-        """Initializes the NSSS soil component.
+        """Initialises the NSSS soil component.
 
         Args:
             model (Model): The Model instance.
@@ -184,7 +203,7 @@ class SMAP(SoilZone):
         beta: float,
         psi_a: float,
     ) -> None:
-        """Initializes the SMAP soil component.
+        """Initialises the SMAP soil component.
 
         Args:
             model (Model): The Model instance.
@@ -226,7 +245,7 @@ class Weibull(UnsatZone):
     MAP = {"k": "k(-)", "lambda_": "lambda(-)"}  # lambda is a keyword in Python
 
     def __init__(self, model: "Model", k: float, lambda_: float) -> None:
-        """Initializes the Weibull unsaturated zone component.
+        """Initialises the Weibull unsaturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -281,7 +300,7 @@ class Q3K3S1(SatZone):
         z1: float,
         alpha: float,
     ) -> None:
-        """Initializes the Q3K3S1 saturated zone component.
+        """Initialises the Q3K3S1 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -333,7 +352,7 @@ class Q2K2S1(SatZone):
         z1: float,
         alpha: float,
     ) -> None:
-        """Initializes the Q2K2S1 saturated zone component.
+        """Initialises the Q2K2S1 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -363,7 +382,7 @@ class Q1K1S1(SatZone):
     def __init__(
         self, model: "Model", dx: float, K1: float, S: float, z1: float, alpha: float
     ) -> None:
-        """Initializes the Q1K1S1 saturated zone component.
+        """Initialises the Q1K1S1 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -385,7 +404,7 @@ class Q1T1S1(SatZone):
     def __init__(
         self, model: "Model", dx: float, T1: float, S: float, z1: float
     ) -> None:
-        """Initializes the Q1T1S1 saturated zone component.
+        """Initialises the Q1T1S1 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -427,7 +446,7 @@ class VKD(SatZone):
         z1: float,
         zp: float,
     ) -> None:
-        """Initializes the VKD saturated zone component.
+        """Initialises the VKD saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -486,7 +505,7 @@ class Q3K3S3(SatZone):
         z1: float,
         alpha: float,
     ) -> None:
-        """Initializes the Q3K3S3 saturated zone component.
+        """Initialises the Q3K3S3 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -555,7 +574,7 @@ class Q2K2S2(SatZone):
         z1: float,
         alpha: float,
     ) -> None:
-        """Initializes the Q2K2S2 saturated zone component.
+        """Initialises the Q2K2S2 saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -580,7 +599,7 @@ class SA1D(SatZone):
     MAP = {"A": "A(m2)", "k": "k(d-1)", "z1": "z1(m)", "S": "S(-)"}
 
     def __init__(self, model: "Model", A: float, k: float, z1: float, S: float) -> None:
-        """Initializes the SA1D saturated zone component.
+        """Initialises the SA1D saturated zone component.
 
         Args:
             model (Model): The Model instance.
@@ -598,7 +617,7 @@ class Observations:
     def __init__(
         self, model: "Model", obs_df: pd.DataFrame, columns: Dict[str, str]
     ) -> None:
-        """Initializes Observations component.
+        """Initialises Observations component.
 
         Args:
             model (Model): The Model instance.

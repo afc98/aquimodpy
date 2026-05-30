@@ -222,7 +222,7 @@ def test_model_get_results_calibration(tmp_path):
     assert results["Soil_Params"]["theta_fc(-)"].iloc[0] == 0.4
 
 
-def test_model_get_results_file_not_found(tmp_path, capsys):
+def test_model_get_results_file_not_found(tmp_path):
     model = Model("Test", "exe", str(tmp_path))
     FAO(model, 0.4, 0.1, 1000, 0.5, 0.8)
     model.simulation_mode = "e"
@@ -230,7 +230,17 @@ def test_model_get_results_file_not_found(tmp_path, capsys):
     # Create Output dir but no file
     os.makedirs(os.path.join(tmp_path, "Output"), exist_ok=True)
 
-    results = model.get_results(run_number=99)
-    captured = capsys.readouterr()
-    assert "Warning: Time series file" in captured.out
+    with pytest.warns(UserWarning, match="Time series file"):
+        results = model.get_results(run_number=99)
     assert "Soil" not in results
+
+
+def test_model_load_parameters_invalid_df_data():
+    model = Model("Test", "exe", "dir")
+    FAO(model, 0.4, 0.1, 1000, 0.5, 0.8)
+
+    # Passing a DataFrame that doesn't have valid parameters expected by the component
+    df = pd.DataFrame([{"invalid_param": 0.35}])
+
+    with pytest.raises(ValueError, match="Invalid parameters"):
+        model.load_parameters({"Soil_Params": df}, index=0)
