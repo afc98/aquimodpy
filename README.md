@@ -42,6 +42,7 @@ model = Model(
     model_name="MySimulation",
     executable_path="~/AquiMod2/AquiMod2.exe",
     working_directory="./sim_results",
+    spinup_time=12,
     exec_prefix=["wine"] # Required for Linux
 )
 
